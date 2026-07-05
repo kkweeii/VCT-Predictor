@@ -1,115 +1,263 @@
 {
-  "name": "VCT Match Predictor \u2014 Agentic Workflow",
+  "name": "VCT Match Predictor — Agentic Workflow",
   "nodes": [
     {
-      "name": "Schedule Trigger",
-      "type": "n8n-nodes-base.scheduleTrigger",
       "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "field": "days",
-              "daysInterval": 1
-            }
-          ]
-        }
-      },
-      "position": [
-        100,
-        300
-      ]
-    },
-    {
-      "name": "HTTP \u2014 Call /series",
-      "type": "n8n-nodes-base.httpRequest",
-      "parameters": {
-        "url": "https://YOUR_API_URL/series",
         "method": "POST",
+        "url": "https://vct-predictor.onrender.com/series",
         "sendBody": true,
-        "contentType": "json",
-        "body": {
-          "team_a": "LOUD",
-          "team_b": "NRG",
-          "format": "bo3"
-        }
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"team_a\": \"{{ $json.team_a }}\",\n  \"team_b\": \"{{ $json.team_b }}\",\n  \"format\": \"{{ $json.format }}\"\n}",
+        "options": {}
       },
+      "name": "HTTP — Call /series",
+      "type": "n8n-nodes-base.httpRequest",
       "position": [
-        300,
-        300
-      ]
+        -528,
+        128
+      ],
+      "id": "c275b7eb-0cf7-4694-9b3d-3d9cd0018a85",
+      "typeVersion": 4.4,
+      "onError": "continueErrorOutput",
+      "notes": "⚠️ VCT Predictor Error: FastAPI is down or team not found. Please check the API."
     },
     {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ JSON.stringify($json) }}",
+        "options": {
+          "systemMessage": "You are a VCT esports analyst. Given prediction JSON, write a match preview with no tables and no markdown formatting. Use only plain text with simple line breaks. Cover: predicted winner, map veto summary, per-map predictions, and confidence level. Keep it under 200 words."
+        }
+      },
       "name": "AI Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
-      "parameters": {
-        "systemMessage": "You are a VCT esports analyst. Given prediction JSON, write a 3-sentence match preview covering: predicted winner, key map advantages, and confidence level.",
-        "text": "={{ JSON.stringify($json) }}"
-      },
       "position": [
-        500,
-        300
-      ]
+        -320,
+        128
+      ],
+      "id": "f19f88fa-4c70-467c-b06a-ce26e241d8c4",
+      "typeVersion": 3.1
     },
     {
-      "name": "IF High Confidence",
-      "type": "n8n-nodes-base.if",
       "parameters": {
         "conditions": {
-          "string": [
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
             {
-              "value1": "={{ $json.map_results[0].confidence }}",
-              "value2": "High"
+              "id": "2289a476-55dd-46d3-b293-a778aad997aa",
+              "leftValue": "={{ $json.map_results[0].confidence }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
             }
-          ]
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "IF High Confidence",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -32,
+        128
+      ],
+      "id": "743b989a-9208-432e-a0a7-5a50dfc87577",
+      "typeVersion": 2.3
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -320,
+        352
+      ],
+      "id": "f7906993-c2ff-4408-b208-7eddd5e8c2ee",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "rBUyhwV7LK8BfYjI",
+          "name": "Google Gemini(PaLM) Api account"
         }
-      },
-      "position": [
-        700,
-        300
-      ]
+      }
     },
     {
-      "name": "Slack Alert",
-      "type": "n8n-nodes-base.slack",
       "parameters": {
-        "channel": "#vct-predictions",
-        "text": "={{ $node['AI Agent'].json.output }}"
+        "chatId": "8215649987",
+        "text": "=🎯 VCT MATCH PREDICTION\n\n⚔️ {{ $('HTTP — Call /series').item.json.team_a }} vs {{ $('HTTP — Call /series').item.json.team_b }}\n📋 Format: {{ $('HTTP — Call /series').item.json.format }}\n🏆 Predicted Winner: {{ $('HTTP — Call /series').item.json.series_winner }}\n📊 Score: {{ $('HTTP — Call /series').item.json.score }}\n✅ Confidence: HIGH\n\n🗺️ Map Results:\n{{ $('HTTP — Call /series').item.json.map_results.map(m => '• ' + m.map + ' → ' + m.predicted_winner + ' (' + m.confidence + ')').join('\\n') }}\n\n🤖 Powered by XGBoost + n8n",
+        "additionalFields": {}
       },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        900,
-        200
-      ]
+        320,
+        96
+      ],
+      "id": "40b3c989-1c2f-40e5-9baa-db362015b188",
+      "name": "Send a text message",
+      "webhookId": "31ed90b6-9e77-499c-9db6-84f7c5b00e9d",
+      "credentials": {
+        "telegramApi": {
+          "id": "qwLt0UQQIuf7BSFo",
+          "name": "Telegram account"
+        }
+      }
     },
     {
-      "name": "Log to Google Sheets",
-      "type": "n8n-nodes-base.googleSheets",
       "parameters": {
-        "operation": "append",
-        "sheetId": "YOUR_SHEET_ID"
+        "chatId": "8215649987",
+        "text": "=🎯 VCT MATCH PREDICTION\n\n⚔️ {{ $('HTTP — Call /series').item.json.team_a }} vs {{ $('HTTP — Call /series').item.json.team_b }}\n📋 Format: {{ $('HTTP — Call /series').item.json.format }}\n🏆 Predicted Winner: {{ $('HTTP — Call /series').item.json.series_winner }}\n📊 Score: {{ $('HTTP — Call /series').item.json.score }}\n⚠️ Confidence: LOW\n\n🗺️ Map Results:\n{{ $('HTTP — Call /series').item.json.map_results.map(m => '• ' + m.map + ' → ' + m.predicted_winner + ' (' + m.confidence + ')').join('\\n') }}\n\n🤖 Powered by XGBoost + n8n",
+        "additionalFields": {}
       },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
-        900,
-        400
-      ]
+        160,
+        144
+      ],
+      "id": "8e681152-8ab1-4798-b19e-b18201444b3b",
+      "name": "Send a text message1",
+      "webhookId": "104c720e-0d90-483f-b61c-92dfd483c2e0",
+      "credentials": {
+        "telegramApi": {
+          "id": "qwLt0UQQIuf7BSFo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "retention",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -960,
+        128
+      ],
+      "id": "a0c320ec-f29c-49b8-bfff-e966fb7656ba",
+      "name": "Webhook",
+      "webhookId": "0e75a71d-07ef-4b0b-adf0-3b099ff88e77"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconsole.log(JSON.stringify(data));\nreturn [{\n  json: {\n    team_a: data.team_a || data.body?.team_a || \"not found\",\n    team_b: data.team_b || data.body?.team_b || \"not found\", \n    format: data.format || data.body?.format || \"not found\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        128
+      ],
+      "id": "81abbcf6-fcc9-456b-92cc-1f32b9c1cb27",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "chatId": "8215649987",
+        "text": "=⚠️ VCT Predictor Alert!  Error occurred in the workflow. Time: {{ new Date().toISOString() }} Please check your FastAPI on Render.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -544,
+        352
+      ],
+      "id": "f26d975c-3f67-49b6-9893-6c642d047781",
+      "name": "Send a text message2",
+      "webhookId": "707826ee-1f77-426d-83ec-4b7753b624ef",
+      "credentials": {
+        "telegramApi": {
+          "id": "qwLt0UQQIuf7BSFo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a VCT esports coach. Based on this prediction data: {{ JSON.stringify($('HTTP — Call /series').item.json) }}\n\nGive exactly 3 bullet point tactical recommendations for {{ $('HTTP — Call /series').item.json.series_winner }} to win the series. Keep each point under 20 words. No markdown formatting.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -32,
+        432
+      ],
+      "id": "afb8f7df-afb7-4ff7-88db-a1d9d6efbb98",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        608
+      ],
+      "id": "1221ea4b-0213-448d-a34a-4f894f242817",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "rBUyhwV7LK8BfYjI",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8215649987",
+        "text": "=🧠 Tactical advice for {{ $('HTTP — Call /series').item.json.series_winner }}:  {{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        304,
+        432
+      ],
+      "id": "30c5b85e-17bb-45e8-83cc-3239a5bcf3bd",
+      "name": "Send a text message3",
+      "webhookId": "8d733852-9ce9-4e8e-b07b-b3d12903e42f",
+      "credentials": {
+        "telegramApi": {
+          "id": "qwLt0UQQIuf7BSFo",
+          "name": "Telegram account"
+        }
+      }
     }
   ],
+  "pinData": {},
   "connections": {
-    "Schedule Trigger": {
-      "main": [
-        [
-          {
-            "node": "HTTP \u2014 Call /series",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP \u2014 Call /series": {
+    "HTTP — Call /series": {
       "main": [
         [
           {
             "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message2",
             "type": "main",
             "index": 0
           }
@@ -131,19 +279,108 @@
       "main": [
         [
           {
-            "node": "Slack Alert",
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Log to Google Sheets",
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Call /series",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message1": {
+      "main": [
+        []
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        []
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Send a text message3",
             "type": "main",
             "index": 0
           }
         ]
       ]
     }
-  }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "22a32973-bca6-40a3-833a-e26b1c0160a5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1e511516838668c8522f4aaf9a90a985f02684f653cc8eecaa10e92c73dfbf42"
+  },
+  "nodeGroups": [],
+  "id": "cf2VAnVV8ryVf0y9",
+  "tags": []
 }
