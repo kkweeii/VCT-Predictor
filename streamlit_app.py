@@ -2,55 +2,33 @@ import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 
-API_URL     = "https://vct-predictor.onrender.com"
-N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook-test/retention"  # replace with your webhook URL
-
-# Team logos
-TEAM_LOGOS = {
-    "100 Thieves":      "https://upload.wikimedia.org/wikipedia/en/thumb/5/54/100_Thieves_logo.png/200px-100_Thieves_logo.png",
-    "LOUD":             "https://upload.wikimedia.org/wikipedia/en/thumb/0/07/LOUD_Esports_logo.png/200px-LOUD_Esports_logo.png",
-    "NRG Esports":      "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/NRG_Esports_logo.png/200px-NRG_Esports_logo.png",
-    "Cloud9":           "https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Cloud9_logo.png/200px-Cloud9_logo.png",
-    "Evil Geniuses":    "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Evil_Geniuses_logo.png/200px-Evil_Geniuses_logo.png",
-    "FNATIC":           "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/Fnatic_logo.png/200px-Fnatic_logo.png",
-    "Team Liquid":      "https://upload.wikimedia.org/wikipedia/en/thumb/4/45/Team_Liquid_logo.png/200px-Team_Liquid_logo.png",
-    "DRX":              "https://upload.wikimedia.org/wikipedia/en/thumb/8/8b/DRX_logo.png/200px-DRX_logo.png",
-    "Paper Rex":        "https://upload.wikimedia.org/wikipedia/en/thumb/7/7e/Paper_Rex_logo.png/200px-Paper_Rex_logo.png",
-    "T1":               "https://upload.wikimedia.org/wikipedia/en/thumb/1/13/T1_logo.png/200px-T1_logo.png",
-    "ZETA DIVISION":    "https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/Zeta_Division_logo.png/200px-Zeta_Division_logo.png",
-    "FunPlus Phoenix":  "https://upload.wikimedia.org/wikipedia/en/thumb/0/06/FunPlus_Phoenix_logo.png/200px-FunPlus_Phoenix_logo.png",
-    "EDward Gaming":    "https://upload.wikimedia.org/wikipedia/en/thumb/6/6f/Edward_Gaming_logo.png/200px-Edward_Gaming_logo.png",
-    "Natus Vincere":    "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/Natus_Vincere_logo.png/200px-Natus_Vincere_logo.png",
-    "Team Vitality":    "https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/Team_Vitality_logo.png/200px-Team_Vitality_logo.png",
-    "Sentinels":        "https://upload.wikimedia.org/wikipedia/en/thumb/1/14/Sentinels_logo.png/200px-Sentinels_logo.png",
-    "FURIA":            "https://upload.wikimedia.org/wikipedia/en/thumb/f/f7/Furia_Esports_logo.png/200px-Furia_Esports_logo.png",
-    "Gen.G":            "https://upload.wikimedia.org/wikipedia/en/thumb/8/8d/Gen.G_logo.png/200px-Gen.G_logo.png",
-    "Talon Esports":    "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/Talon_Esports_logo.png/200px-Talon_Esports_logo.png",
-}
-DEFAULT_LOGO = "https://upload.wikimedia.org/wikipedia/en/thumb/d/d8/Valorant_Champions_Tour_logo.png/200px-Valorant_Champions_Tour_logo.png"
-
-def get_logo(team): return TEAM_LOGOS.get(team, DEFAULT_LOGO)
+API_URL = "https://vct-predictor.onrender.com"
 
 st.set_page_config(page_title="VCT 2023 Match Predictor", page_icon="🎯", layout="wide")
 
+# ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-.team-card {
-    background: #0f0f1a;
-    border-radius: 12px;
+.metric-card {
+    background: #1e1e2e;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    border: 1px solid #313244;
+}
+.win-card {
+    background: linear-gradient(135deg, #1e3a5f, #0d2137);
+    border-radius: 10px;
     padding: 20px;
     text-align: center;
-    border: 1px solid #2d2d4e;
+    border: 2px solid #185FA5;
 }
-.vs-text {
-    font-size: 2.5rem;
-    font-weight: bold;
-    text-align: center;
-    color: #ff4655;
-    margin-top: 40px;
-}
+.confidence-high { color: #00ff88; font-weight: bold; }
+.confidence-med  { color: #ffaa00; font-weight: bold; }
+.confidence-low  { color: #ff4444; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -64,12 +42,19 @@ def load_teams():
         df = pd.read_csv("model_artifacts/team_avg_stats.csv")
         return sorted(df["team"].dropna().unique().tolist()), df
     except:
-        return ["LOUD","NRG Esports","FNATIC","Cloud9"], pd.DataFrame()
+        return ["LOUD","NRG Esports","FNATIC","Cloud9","DRX","Paper Rex"], pd.DataFrame()
 
 @st.cache_data
 def load_map_wr():
     try:
         return pd.read_csv("model_artifacts/map_wr_lookup.csv")
+    except:
+        return pd.DataFrame()
+
+@st.cache_data
+def load_player_stats():
+    try:
+        return pd.read_csv("model_artifacts/team_avg_stats.csv")
     except:
         return pd.DataFrame()
 
@@ -99,32 +84,24 @@ with st.sidebar:
     remaining = [t for t in teams if t != team_a]
     team_b = st.selectbox("Select team B", remaining, index=0, key="tb")
     st.divider()
-    predict_btn = st.button("🔮 Predict & Send to n8n",
-                            use_container_width=True, type="primary")
+    predict_btn = st.button("🔮 Predict series", use_container_width=True, type="primary")
     st.divider()
     st.caption("Dataset: VCT 2023 — Kaggle")
     st.caption("Model: XGBoost Classifier")
     st.caption("Deployed: FastAPI on Render")
-    st.caption("Workflow: n8n + Telegram")
 
-# ── Team header with logos ────────────────────────────────────────────────────
-col1, col2, col3 = st.columns([2, 1, 2])
+# ── Team comparison header ────────────────────────────────────────────────────
+col1, col2, col3 = st.columns([2,1,2])
 with col1:
-    logo_a = get_logo(team_a)
-    st.image(logo_a, width=100)
     st.markdown(f"### 🔵 {team_a}")
     sa = get_team_stats(team_a)
     if sa:
         st.metric("Avg ACS", f"{sa.get('avg_acs',0):.1f}")
         st.metric("Avg KD",  f"{sa.get('avg_kd_ratio',0):.2f}")
         st.metric("Avg ADR", f"{sa.get('avg_adr',0):.1f}")
-
 with col2:
-    st.markdown("<div class='vs-text'>VS</div>", unsafe_allow_html=True)
-
+    st.markdown("<h2 style='text-align:center;margin-top:40px'>VS</h2>", unsafe_allow_html=True)
 with col3:
-    logo_b = get_logo(team_b)
-    st.image(logo_b, width=100)
     st.markdown(f"### 🔴 {team_b}")
     sb = get_team_stats(team_b)
     if sb:
@@ -139,6 +116,8 @@ tab1, tab2, tab3 = st.tabs(["🗺️ Map Analysis", "📊 Team Stats", "🏆 Pre
 
 with tab1:
     st.subheader("Map win rates comparison")
+
+    # Bar chart
     wr_a = [get_wr(team_a, m)*100 for m in ALL_MAPS]
     wr_b = [get_wr(team_b, m)*100 for m in ALL_MAPS]
 
@@ -156,32 +135,32 @@ with tab1:
     ax.axhline(50, color='gray', linestyle='--', linewidth=0.8, alpha=0.5)
     for bar in bars_a:
         ax.annotate(f'{bar.get_height():.0f}%',
-                    xy=(bar.get_x()+bar.get_width()/2, bar.get_height()),
-                    xytext=(0,3), textcoords="offset points", ha='center', fontsize=8)
+                    xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    xytext=(0, 3), textcoords="offset points", ha='center', fontsize=8)
     for bar in bars_b:
         ax.annotate(f'{bar.get_height():.0f}%',
-                    xy=(bar.get_x()+bar.get_width()/2, bar.get_height()),
-                    xytext=(0,3), textcoords="offset points", ha='center', fontsize=8)
+                    xy=(bar.get_x() + bar.get_width()/2, bar.get_height()),
+                    xytext=(0, 3), textcoords="offset points", ha='center', fontsize=8)
     fig.tight_layout()
     st.pyplot(fig)
     plt.close()
 
+    # Best and worst maps
     col_a, col_b = st.columns(2)
     with col_a:
         best_a  = ALL_MAPS[wr_a.index(max(wr_a))]
         worst_a = ALL_MAPS[wr_a.index(min(wr_a))]
-        st.image(get_logo(team_a), width=40)
-        st.success(f"✅ Best map: **{best_a}** ({max(wr_a):.0f}%)")
-        st.error(f"❌ Worst map: **{worst_a}** ({min(wr_a):.0f}%)")
+        st.success(f"✅ {team_a} best map: **{best_a}** ({max(wr_a):.0f}%)")
+        st.error(f"❌ {team_a} worst map: **{worst_a}** ({min(wr_a):.0f}%)")
     with col_b:
         best_b  = ALL_MAPS[wr_b.index(max(wr_b))]
         worst_b = ALL_MAPS[wr_b.index(min(wr_b))]
-        st.image(get_logo(team_b), width=40)
-        st.success(f"✅ Best map: **{best_b}** ({max(wr_b):.0f}%)")
-        st.error(f"❌ Worst map: **{worst_b}** ({min(wr_b):.0f}%)")
+        st.success(f"✅ {team_b} best map: **{best_b}** ({max(wr_b):.0f}%)")
+        st.error(f"❌ {team_b} worst map: **{worst_b}** ({min(wr_b):.0f}%)")
 
 with tab2:
     st.subheader("Team stats comparison")
+
     if not team_stats_df.empty:
         stat_cols = [c for c in team_stats_df.columns if c.startswith('avg_')]
         sa_row = team_stats_df[team_stats_df['team']==team_a]
@@ -189,24 +168,25 @@ with tab2:
 
         if not sa_row.empty and not sb_row.empty:
             compare = pd.DataFrame({
-                'Stat':  [c.replace('avg_','').upper() for c in stat_cols],
-                team_a:  [round(sa_row.iloc[0][c], 2) for c in stat_cols],
-                team_b:  [round(sb_row.iloc[0][c], 2) for c in stat_cols],
+                'Stat':   [c.replace('avg_','').upper() for c in stat_cols],
+                team_a:   [round(sa_row.iloc[0][c], 2) for c in stat_cols],
+                team_b:   [round(sb_row.iloc[0][c], 2) for c in stat_cols],
             })
             compare['Advantage'] = compare.apply(
                 lambda r: f"🔵 {team_a}" if r[team_a] > r[team_b] else f"🔴 {team_b}", axis=1)
             st.dataframe(compare.set_index('Stat'), use_container_width=True)
 
-            key_stats = [s for s in ['avg_acs','avg_kd_ratio','avg_adr','avg_hs_pct','avg_rating']
-                         if s in stat_cols]
+            # Radar-style bar chart for key stats
+            key_stats = ['avg_acs','avg_kd_ratio','avg_adr','avg_hs_pct','avg_rating']
+            key_stats = [s for s in key_stats if s in stat_cols]
             if key_stats:
                 fig2, ax2 = plt.subplots(figsize=(8, 3))
                 vals_a = [sa_row.iloc[0][s] for s in key_stats]
                 vals_b = [sb_row.iloc[0][s] for s in key_stats]
                 labels = [s.replace('avg_','').upper() for s in key_stats]
                 x2 = np.arange(len(labels))
-                ax2.bar(x2-0.2, vals_a, 0.4, label=team_a, color='#185FA5', alpha=0.85)
-                ax2.bar(x2+0.2, vals_b, 0.4, label=team_b, color='#993C1D', alpha=0.85)
+                ax2.bar(x2 - 0.2, vals_a, 0.4, label=team_a, color='#185FA5', alpha=0.85)
+                ax2.bar(x2 + 0.2, vals_b, 0.4, label=team_b, color='#993C1D', alpha=0.85)
                 ax2.set_xticks(x2)
                 ax2.set_xticklabels(labels)
                 ax2.set_title("Key stats comparison")
@@ -217,40 +197,18 @@ with tab2:
 
 with tab3:
     if not predict_btn:
-        st.info("👈 Select teams and click **Predict & Send to n8n** in the sidebar.")
+        st.info("👈 Select teams and click **Predict series** in the sidebar to see results.")
     else:
-        # Trigger n8n webhook
-        st.subheader("📡 Sending to n8n workflow...")
-        n8n_triggered = False
-        try:
-            n8n_resp = requests.post(
-                N8N_WEBHOOK,
-                json={"team_a": team_a, "team_b": team_b, "format": fmt.lower()},
-                headers={"Content-Type": "application/json"},
-                timeout=10
-            )
-            if n8n_resp.status_code in [200, 201]:
-                st.success("✅ n8n workflow triggered! Telegram notification will be sent.")
-                n8n_triggered = True
-            else:
-                st.warning(f"⚠️ n8n webhook returned {n8n_resp.status_code}")
-        except Exception as e:
-            st.warning(f"⚠️ Could not reach n8n: {e}")
-
-        st.divider()
-
         # Veto simulation
         def simulate_veto(ta, tb, fmt):
             pool = ALL_MAPS.copy()
             used, played, log = [], [], []
             def ban(team, name):
-                worst = sorted([m for m in pool if m not in used],
-                               key=lambda m: get_wr(team,m))[0]
+                worst = sorted([m for m in pool if m not in used], key=lambda m: get_wr(team,m))[0]
                 used.append(worst)
                 log.append({"Team":name,"Action":"Ban","Map":worst})
             def pick(team, name, tag):
-                best = sorted([m for m in pool if m not in used],
-                              key=lambda m: get_wr(team,m), reverse=True)[0]
+                best = sorted([m for m in pool if m not in used], key=lambda m: get_wr(team,m), reverse=True)[0]
                 used.append(best); played.append({"map":best,"type":tag})
                 log.append({"Team":name,"Action":"Pick","Map":best})
             def decider():
@@ -263,14 +221,11 @@ with tab3:
             elif fmt=="BO3":
                 ban(ta,"Team A"); ban(tb,"Team B")
                 ban(ta,"Team A"); ban(tb,"Team B")
-                pick(ta,"Team A","Team A pick")
-                pick(tb,"Team B","Team B pick")
-                decider()
+                pick(ta,"Team A","Team A pick"); pick(tb,"Team B","Team B pick"); decider()
             else:
                 ban(ta,"Team A"); ban(tb,"Team B")
                 pick(ta,"Team A","Team A pick"); pick(ta,"Team A","Team A pick")
-                pick(tb,"Team B","Team B pick"); pick(tb,"Team B","Team B pick")
-                decider()
+                pick(tb,"Team B","Team B pick"); pick(tb,"Team B","Team B pick"); decider()
             return played, log
 
         played, log = simulate_veto(team_a, team_b, fmt)
@@ -285,17 +240,16 @@ with tab3:
             st.markdown("**Maps to be played:**")
             for i, v in enumerate(played):
                 icons = {"Team A pick":"🔵","Team B pick":"🔴","Decider":"🟡"}
-                st.markdown(f"**Map {i+1}:** {icons.get(v['type'],'⚪')} "
-                            f"{v['map']} — *{v['type']}*")
+                st.markdown(f"**Map {i+1}:** {icons.get(v['type'],'⚪')} {v['map']} — *{v['type']}*")
 
         st.divider()
 
-        # Prediction
+        # Run prediction
         max_wins = 3 if fmt=="BO5" else 2 if fmt=="BO3" else 1
         score_a, score_b = 0, 0
         map_results = []
 
-        with st.spinner("🔮 Running XGBoost prediction via FastAPI..."):
+        with st.spinner("🔮 Running XGBoost prediction..."):
             for v in played:
                 if score_a >= max_wins or score_b >= max_wins: break
                 try:
@@ -316,23 +270,19 @@ with tab3:
 
         winner = team_a if score_a >= max_wins else team_b
 
-        # Result with logos
+        # Series result banner
         st.subheader("🏆 Series result")
         c1, c2, c3 = st.columns([2,1,2])
         with c1:
-            st.image(get_logo(team_a), width=80)
             if winner == team_a:
                 st.success(f"🏆 **{team_a}**")
             else:
                 st.error(f"**{team_a}**")
             st.metric("Maps won", score_a)
         with c2:
-            st.markdown(
-                f"<h2 style='text-align:center;margin-top:30px;color:#ff4655'>"
-                f"{score_a} – {score_b}</h2>",
-                unsafe_allow_html=True)
+            st.markdown(f"<h2 style='text-align:center;margin-top:20px'>{score_a} – {score_b}</h2>",
+                        unsafe_allow_html=True)
         with c3:
-            st.image(get_logo(team_b), width=80)
             if winner == team_b:
                 st.success(f"🏆 **{team_b}**")
             else:
@@ -348,17 +298,22 @@ with tab3:
             c = r.get("confidence","Low")
             conf_counts[c] = conf_counts.get(c,0) + 1
 
-        fig3, ax3 = plt.subplots(figsize=(6, 0.8))
-        left = 0
-        for label, color in [("High","#00cc66"),("Medium","#ffaa00"),("Low","#ff4444")]:
-            val = conf_counts[label]
-            if val > 0:
-                ax3.barh([""], [val], left=[left], color=color, label=f"{label} ({val})")
-                left += val
-        ax3.set_xlim(0, max(len(map_results),1))
-        ax3.legend(loc="upper right", fontsize=9)
+        fig3, ax3 = plt.subplots(figsize=(6,1.5))
+        colors = ["#00cc66","#ffaa00","#ff4444"]
+        vals   = [conf_counts["High"], conf_counts["Medium"], conf_counts["Low"]]
+        labels = [f"High ({conf_counts['High']})",
+                  f"Medium ({conf_counts['Medium']})",
+                  f"Low ({conf_counts['Low']})"]
+        ax3.barh(["Confidence"], [conf_counts["High"]], color="#00cc66", label=labels[0])
+        ax3.barh(["Confidence"], [conf_counts["Medium"]], left=[conf_counts["High"]],
+                 color="#ffaa00", label=labels[1])
+        ax3.barh(["Confidence"], [conf_counts["Low"]],
+                 left=[conf_counts["High"]+conf_counts["Medium"]],
+                 color="#ff4444", label=labels[2])
+        ax3.set_xlim(0, len(map_results))
+        ax3.legend(loc="upper right")
         ax3.set_title("Prediction confidence per map")
-        ax3.set_yticks([])
+        ax3.axis('off') if len(map_results)==0 else None
         fig3.tight_layout()
         st.pyplot(fig3)
         plt.close()
@@ -370,39 +325,31 @@ with tab3:
             prob_b = r.get("team_b_win_prob", 0.5)
             conf   = r.get("confidence","–")
             conf_icon = {"High":"🟢","Medium":"🟡","Low":"🔴"}.get(conf,"⚪")
-            pred_winner = r.get("predicted_winner","?")
 
-            with st.expander(
-                f"Map {i+1} — {r['map']} ({r['type']}) → {pred_winner} wins {conf_icon}"):
-
-                # Winner logo
-                st.image(get_logo(pred_winner), width=50)
-                st.markdown(f"**Predicted winner: {pred_winner}**")
-
+            with st.expander(f"Map {i+1} — {r['map']} ({r['type']}) → {r.get('predicted_winner','?')} wins {conf_icon}"):
                 m1, m2, m3 = st.columns(3)
                 with m1:
                     st.metric(f"{team_a} win prob", f"{prob_a*100:.1f}%",
-                              delta=f"{(prob_a-0.5)*100:+.1f}%")
+                              delta=f"+{(prob_a-0.5)*100:.1f}%" if prob_a>0.5 else f"{(prob_a-0.5)*100:.1f}%")
                 with m2:
                     st.metric("Confidence", conf)
                 with m3:
                     st.metric(f"{team_b} win prob", f"{prob_b*100:.1f}%",
-                              delta=f"{(prob_b-0.5)*100:+.1f}%")
+                              delta=f"+{(prob_b-0.5)*100:.1f}%" if prob_b>0.5 else f"{(prob_b-0.5)*100:.1f}%")
 
+                # Prob bar
                 fig4, ax4 = plt.subplots(figsize=(6, 0.6))
                 ax4.barh([""], [prob_a], color="#185FA5", label=team_a)
                 ax4.barh([""], [prob_b], left=[prob_a], color="#993C1D", label=team_b)
                 ax4.set_xlim(0,1)
                 ax4.axvline(0.5, color='white', linewidth=1.5)
                 ax4.legend(loc="upper right", fontsize=8)
-                ax4.set_xticks([0,0.25,0.5,0.75,1.0])
+                ax4.set_xticks([0, 0.25, 0.5, 0.75, 1.0])
                 ax4.set_xticklabels(["0%","25%","50%","75%","100%"], fontsize=8)
                 fig4.tight_layout()
                 st.pyplot(fig4)
                 plt.close()
 
-        if n8n_triggered:
-            st.success("📱 Telegram notification sent via n8n workflow!")
-
+        # Raw JSON
         with st.expander("📋 Raw API response (for report)"):
             st.json(map_results)
