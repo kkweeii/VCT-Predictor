@@ -8,32 +8,77 @@ API_URL     = "https://vct-predictor.onrender.com"
 N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook/retention"  # replace after setting up webhook in n8n
 
 
-TEAM_LOGOS = {
-    "100 Thieves":     "https://upload.wikimedia.org/wikipedia/en/thumb/5/54/100_Thieves_logo.png/200px-100_Thieves_logo.png",
-    "LOUD":            "https://upload.wikimedia.org/wikipedia/en/thumb/0/07/LOUD_Esports_logo.png/200px-LOUD_Esports_logo.png",
-    "NRG Esports":     "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/NRG_Esports_logo.png/200px-NRG_Esports_logo.png",
-    "Cloud9":          "https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Cloud9_logo.png/200px-Cloud9_logo.png",
-    "Evil Geniuses":   "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Evil_Geniuses_logo.png/200px-Evil_Geniuses_logo.png",
-    "FNATIC":          "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/Fnatic_logo.png/200px-Fnatic_logo.png",
-    "Team Liquid":     "https://upload.wikimedia.org/wikipedia/en/thumb/4/45/Team_Liquid_logo.png/200px-Team_Liquid_logo.png",
-    "DRX":             "https://upload.wikimedia.org/wikipedia/en/thumb/8/8b/DRX_logo.png/200px-DRX_logo.png",
-    "Paper Rex":       "https://upload.wikimedia.org/wikipedia/en/thumb/7/7e/Paper_Rex_logo.png/200px-Paper_Rex_logo.png",
-    "T1":              "https://upload.wikimedia.org/wikipedia/en/thumb/1/13/T1_logo.png/200px-T1_logo.png",
-    "ZETA DIVISION":   "https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/Zeta_Division_logo.png/200px-Zeta_Division_logo.png",
-    "FunPlus Phoenix": "https://upload.wikimedia.org/wikipedia/en/thumb/0/06/FunPlus_Phoenix_logo.png/200px-FunPlus_Phoenix_logo.png",
-    "EDward Gaming":   "https://upload.wikimedia.org/wikipedia/en/thumb/6/6f/Edward_Gaming_logo.png/200px-Edward_Gaming_logo.png",
-    "Natus Vincere":   "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/Natus_Vincere_logo.png/200px-Natus_Vincere_logo.png",
-    "Team Vitality":   "https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/Team_Vitality_logo.png/200px-Team_Vitality_logo.png",
-    "Sentinels":       "https://upload.wikimedia.org/wikipedia/en/thumb/1/14/Sentinels_logo.png/200px-Sentinels_logo.png",
-    "FURIA":           "https://upload.wikimedia.org/wikipedia/en/thumb/f/f7/Furia_Esports_logo.png/200px-Furia_Esports_logo.png",
-    "Gen.G":           "https://upload.wikimedia.org/wikipedia/en/thumb/8/8d/Gen.G_logo.png/200px-Gen.G_logo.png",
-    "Talon Esports":   "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/Talon_Esports_logo.png/200px-Talon_Esports_logo.png",
-    "Sentinels":       "https://upload.wikimedia.org/wikipedia/en/thumb/1/14/Sentinels_logo.png/200px-Sentinels_logo.png",
+TEAM_COLORS = {
+    "100 Thieves":          "#C8102E",  # Red
+    "Attacking Soul Esports": "#FF6B00", # Orange
+    "BBL Esports":          "#E4002B",  # Red
+    "Bilibili Gaming":      "#00A1D6",  # Blue
+    "Cloud9":               "#1DA1F2",  # Sky blue
+    "DRX":                  "#C89B3C",  # Gold
+    "DetonatioN FocusMe":   "#FF0000",  # Red
+    "Douyu Gaming":         "#FF6600",  # Orange
+    "Dragon Ranger Gaming": "#8B0000",  # Dark red
+    "EDward Gaming":        "#012FA2",  # Dark blue
+    "Evil Geniuses":        "#0066CC",  # Blue
+    "FNATIC":               "#FF5500",  # Orange
+    "FURIA":                "#000000",  # Black
+    "FUT Esports":          "#E4002B",  # Red
+    "Four Angry Men":       "#444444",  # Dark grey
+    "FunPlus Phoenix":      "#AA272F",  # Dark red
+    "Gank Gaming":          "#6A0DAD",  # Purple
+    "Gen.G":                "#C8A951",  # Gold
+    "Giants Gaming":        "#FF6600",  # Orange
+    "Global Esports":       "#00A651",  # Green
+    "Invincible Gaming":    "#8B0000",  # Dark red
+    "KOI":                  "#FF1493",  # Pink
+    "KRÜ Esports":          "#00A651",  # Green
+    "Karmine Corp":         "#00D4FF",  # Cyan
+    "Kingzone":             "#6A0DAD",  # Purple
+    "LEVIATÁN":             "#7B2D8B",  # Purple
+    "LOUD":                 "#00C850",  # Green
+    "MIBR":                 "#006847",  # Dark green
+    "Monarch Effect":       "#FFD700",  # Gold
+    "NRG Esports":          "#F5A623",  # Orange
+    "Natus Vincere":        "#F5C400",  # Yellow
+    "Night Wings Gaming":   "#1A1A2E",  # Dark navy
+    "Nova Esports":         "#0066CC",  # Blue
+    "Number One Player":    "#FF4500",  # Red orange
+    "Paper Rex":            "#00C853",  # Green
+    "Rare Atom":            "#00BFFF",  # Deep sky blue
+    "Rex Regum Qeon":       "#FFD700",  # Gold
+    "Royal Never Give Up":  "#003087",  # Dark blue
+    "Sentinels":            "#C0392B",  # Dark red
+    "Shenzhen NTER":        "#FF6600",  # Orange
+    "T1":                   "#CC0000",  # Red
+    "TYLOO":                "#E4002B",  # Red
+    "Talon Esports":        "#E4002B",  # Red
+    "Team Heretics":        "#FF6B00",  # Orange
+    "Team Liquid":          "#009AC7",  # Blue
+    "Team Secret":          "#FFD700",  # Gold
+    "Team Vitality":        "#FFD700",  # Yellow
+    "Totoro Gaming":        "#6A0DAD",  # Purple
+    "Trace Esports":        "#00BFFF",  # Blue
+    "Weibo Gaming":         "#FF6600",  # Orange
+    "ZETA DIVISION":        "#E60033",  # Red
 }
-DEFAULT_LOGO = "https://upload.wikimedia.org/wikipedia/en/thumb/d/d8/Valorant_Champions_Tour_logo.png/200px-Valorant_Champions_Tour_logo.png"
 
-def get_logo(team):
-    return TEAM_LOGOS.get(team, DEFAULT_LOGO)
+def team_avatar(team, size=80):
+    words = team.split()
+    if len(words) >= 2:
+        initials = words[0][0].upper() + words[1][0].upper()
+    else:
+        initials = team[:2].upper()
+    color = TEAM_COLORS.get(team, "#555555")
+    font_size = size // 3
+    return f"""
+    <div style="width:{size}px;height:{size}px;border-radius:50%;
+                background:{color};display:flex;align-items:center;
+                justify-content:center;font-size:{font_size}px;
+                font-weight:bold;color:white;border:3px solid #ddd;
+                margin-bottom:8px;text-shadow:1px 1px 2px rgba(0,0,0,0.5);">
+        {initials}
+    </div>
+    """
 
 st.set_page_config(page_title="VCT 2023 Match Predictor", page_icon="🎯", layout="wide")
 
@@ -92,7 +137,7 @@ with st.sidebar:
 # ── Team comparison header ────────────────────────────────────────────────────
 col1, col2, col3 = st.columns([2,1,2])
 with col1:
-    st.image(get_logo(team_a), width=80)
+    st.markdown(team_avatar(team_a, 80), unsafe_allow_html=True)
     st.markdown(f"### 🔵 {team_a}")
     sa = get_team_stats(team_a)
     if sa:
@@ -102,7 +147,7 @@ with col1:
 with col2:
     st.markdown("<h2 style='text-align:center;margin-top:40px'>VS</h2>", unsafe_allow_html=True)
 with col3:
-    st.image(get_logo(team_b), width=80)
+    st.markdown(team_avatar(team_b, 80), unsafe_allow_html=True)
     st.markdown(f"### 🔴 {team_b}")
     sb = get_team_stats(team_b)
     if sb:
@@ -299,7 +344,7 @@ with tab3:
         st.subheader("🏆 Series result")
         c1, c2, c3 = st.columns([2,1,2])
         with c1:
-            st.image(get_logo(team_a), width=60)
+            st.markdown(team_avatar(team_a, 60), unsafe_allow_html=True)
             if winner == team_a:
                 st.success(f"🏆 **{team_a}**")
             else:
@@ -311,7 +356,7 @@ with tab3:
                 f"{score_a} – {score_b}</h2>",
                 unsafe_allow_html=True)
         with c3:
-            st.image(get_logo(team_b), width=60)
+            st.markdown(team_avatar(team_b, 60), unsafe_allow_html=True)
             if winner == team_b:
                 st.success(f"🏆 **{team_b}**")
             else:
