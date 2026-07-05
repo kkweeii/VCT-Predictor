@@ -1,0 +1,149 @@
+{
+  "name": "VCT Match Predictor \u2014 Agentic Workflow",
+  "nodes": [
+    {
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1
+            }
+          ]
+        }
+      },
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "name": "HTTP \u2014 Call /series",
+      "type": "n8n-nodes-base.httpRequest",
+      "parameters": {
+        "url": "https://YOUR_API_URL/series",
+        "method": "POST",
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "team_a": "LOUD",
+          "team_b": "NRG",
+          "format": "bo3"
+        }
+      },
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "parameters": {
+        "systemMessage": "You are a VCT esports analyst. Given prediction JSON, write a 3-sentence match preview covering: predicted winner, key map advantages, and confidence level.",
+        "text": "={{ JSON.stringify($json) }}"
+      },
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "name": "IF High Confidence",
+      "type": "n8n-nodes-base.if",
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.map_results[0].confidence }}",
+              "value2": "High"
+            }
+          ]
+        }
+      },
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "name": "Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "parameters": {
+        "channel": "#vct-predictions",
+        "text": "={{ $node['AI Agent'].json.output }}"
+      },
+      "position": [
+        900,
+        200
+      ]
+    },
+    {
+      "name": "Log to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_SHEET_ID"
+      },
+      "position": [
+        900,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP \u2014 Call /series",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP \u2014 Call /series": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "IF High Confidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF High Confidence": {
+      "main": [
+        [
+          {
+            "node": "Slack Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
