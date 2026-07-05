@@ -2,35 +2,12 @@ import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 
-API_URL = "https://vct-predictor.onrender.com"
+API_URL     = "https://vct-predictor.onrender.com"
+N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook/retention"  # replace after setting up webhook in n8n
 
 st.set_page_config(page_title="VCT 2023 Match Predictor", page_icon="🎯", layout="wide")
-
-# ── Custom CSS ────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-.metric-card {
-    background: #1e1e2e;
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    border: 1px solid #313244;
-}
-.win-card {
-    background: linear-gradient(135deg, #1e3a5f, #0d2137);
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    border: 2px solid #185FA5;
-}
-.confidence-high { color: #00ff88; font-weight: bold; }
-.confidence-med  { color: #ffaa00; font-weight: bold; }
-.confidence-low  { color: #ff4444; font-weight: bold; }
-</style>
-""", unsafe_allow_html=True)
 
 st.title("🎯 VCT 2023 Match Predictor")
 st.caption("AIT403 Advanced Data Analysis — XGBoost + FastAPI + n8n Agentic Workflow")
@@ -48,13 +25,6 @@ def load_teams():
 def load_map_wr():
     try:
         return pd.read_csv("model_artifacts/map_wr_lookup.csv")
-    except:
-        return pd.DataFrame()
-
-@st.cache_data
-def load_player_stats():
-    try:
-        return pd.read_csv("model_artifacts/team_avg_stats.csv")
     except:
         return pd.DataFrame()
 
@@ -84,11 +54,12 @@ with st.sidebar:
     remaining = [t for t in teams if t != team_a]
     team_b = st.selectbox("Select team B", remaining, index=0, key="tb")
     st.divider()
-    predict_btn = st.button("🔮 Predict series", use_container_width=True, type="primary")
+    predict_btn = st.button("🔮 Predict & Send to n8n", use_container_width=True, type="primary")
     st.divider()
     st.caption("Dataset: VCT 2023 — Kaggle")
     st.caption("Model: XGBoost Classifier")
     st.caption("Deployed: FastAPI on Render")
+    st.caption("Workflow: n8n + Telegram")
 
 # ── Team comparison header ────────────────────────────────────────────────────
 col1, col2, col3 = st.columns([2,1,2])
@@ -116,8 +87,6 @@ tab1, tab2, tab3 = st.tabs(["🗺️ Map Analysis", "📊 Team Stats", "🏆 Pre
 
 with tab1:
     st.subheader("Map win rates comparison")
-
-    # Bar chart
     wr_a = [get_wr(team_a, m)*100 for m in ALL_MAPS]
     wr_b = [get_wr(team_b, m)*100 for m in ALL_MAPS]
 
@@ -145,7 +114,6 @@ with tab1:
     st.pyplot(fig)
     plt.close()
 
-    # Best and worst maps
     col_a, col_b = st.columns(2)
     with col_a:
         best_a  = ALL_MAPS[wr_a.index(max(wr_a))]
@@ -160,7 +128,6 @@ with tab1:
 
 with tab2:
     st.subheader("Team stats comparison")
-
     if not team_stats_df.empty:
         stat_cols = [c for c in team_stats_df.columns if c.startswith('avg_')]
         sa_row = team_stats_df[team_stats_df['team']==team_a]
@@ -168,17 +135,16 @@ with tab2:
 
         if not sa_row.empty and not sb_row.empty:
             compare = pd.DataFrame({
-                'Stat':   [c.replace('avg_','').upper() for c in stat_cols],
-                team_a:   [round(sa_row.iloc[0][c], 2) for c in stat_cols],
-                team_b:   [round(sb_row.iloc[0][c], 2) for c in stat_cols],
+                'Stat':  [c.replace('avg_','').upper() for c in stat_cols],
+                team_a:  [round(sa_row.iloc[0][c], 2) for c in stat_cols],
+                team_b:  [round(sb_row.iloc[0][c], 2) for c in stat_cols],
             })
             compare['Advantage'] = compare.apply(
                 lambda r: f"🔵 {team_a}" if r[team_a] > r[team_b] else f"🔴 {team_b}", axis=1)
             st.dataframe(compare.set_index('Stat'), use_container_width=True)
 
-            # Radar-style bar chart for key stats
-            key_stats = ['avg_acs','avg_kd_ratio','avg_adr','avg_hs_pct','avg_rating']
-            key_stats = [s for s in key_stats if s in stat_cols]
+            key_stats = [s for s in ['avg_acs','avg_kd_ratio','avg_adr','avg_hs_pct','avg_rating']
+                         if s in stat_cols]
             if key_stats:
                 fig2, ax2 = plt.subplots(figsize=(8, 3))
                 vals_a = [sa_row.iloc[0][s] for s in key_stats]
@@ -197,18 +163,43 @@ with tab2:
 
 with tab3:
     if not predict_btn:
-        st.info("👈 Select teams and click **Predict series** in the sidebar to see results.")
+        st.info("👈 Select teams and click **Predict & Send to n8n** in the sidebar.")
     else:
-        # Veto simulation
+        # ── Step 1: Trigger n8n webhook ───────────────────────────────────────
+        st.subheader("📡 Sending to n8n workflow...")
+        n8n_triggered = False
+        try:
+            n8n_resp = requests.post(N8N_WEBHOOK, 
+                json={
+                    "team_a": team_a,
+                    "team_b": team_b,
+                    "format": fmt.lower()
+                },
+                headers={"Content-Type": "application/json"},
+                timeout=10
+            )
+            if n8n_resp.status_code in [200, 201]:
+                st.success("✅ n8n workflow triggered! Telegram notification will be sent.")
+                n8n_triggered = True
+            else:
+                st.warning(f"⚠️ n8n webhook returned {n8n_resp.status_code} — check webhook URL.")
+        except Exception as e:
+            st.warning(f"⚠️ Could not reach n8n webhook: {e}")
+
+        st.divider()
+
+        # ── Step 2: Veto simulation ───────────────────────────────────────────
         def simulate_veto(ta, tb, fmt):
             pool = ALL_MAPS.copy()
             used, played, log = [], [], []
             def ban(team, name):
-                worst = sorted([m for m in pool if m not in used], key=lambda m: get_wr(team,m))[0]
+                worst = sorted([m for m in pool if m not in used],
+                               key=lambda m: get_wr(team,m))[0]
                 used.append(worst)
                 log.append({"Team":name,"Action":"Ban","Map":worst})
             def pick(team, name, tag):
-                best = sorted([m for m in pool if m not in used], key=lambda m: get_wr(team,m), reverse=True)[0]
+                best = sorted([m for m in pool if m not in used],
+                              key=lambda m: get_wr(team,m), reverse=True)[0]
                 used.append(best); played.append({"map":best,"type":tag})
                 log.append({"Team":name,"Action":"Pick","Map":best})
             def decider():
@@ -221,11 +212,14 @@ with tab3:
             elif fmt=="BO3":
                 ban(ta,"Team A"); ban(tb,"Team B")
                 ban(ta,"Team A"); ban(tb,"Team B")
-                pick(ta,"Team A","Team A pick"); pick(tb,"Team B","Team B pick"); decider()
+                pick(ta,"Team A","Team A pick")
+                pick(tb,"Team B","Team B pick")
+                decider()
             else:
                 ban(ta,"Team A"); ban(tb,"Team B")
                 pick(ta,"Team A","Team A pick"); pick(ta,"Team A","Team A pick")
-                pick(tb,"Team B","Team B pick"); pick(tb,"Team B","Team B pick"); decider()
+                pick(tb,"Team B","Team B pick"); pick(tb,"Team B","Team B pick")
+                decider()
             return played, log
 
         played, log = simulate_veto(team_a, team_b, fmt)
@@ -240,16 +234,17 @@ with tab3:
             st.markdown("**Maps to be played:**")
             for i, v in enumerate(played):
                 icons = {"Team A pick":"🔵","Team B pick":"🔴","Decider":"🟡"}
-                st.markdown(f"**Map {i+1}:** {icons.get(v['type'],'⚪')} {v['map']} — *{v['type']}*")
+                st.markdown(f"**Map {i+1}:** {icons.get(v['type'],'⚪')} "
+                            f"{v['map']} — *{v['type']}*")
 
         st.divider()
 
-        # Run prediction
+        # ── Step 3: FastAPI prediction ────────────────────────────────────────
         max_wins = 3 if fmt=="BO5" else 2 if fmt=="BO3" else 1
         score_a, score_b = 0, 0
         map_results = []
 
-        with st.spinner("🔮 Running XGBoost prediction..."):
+        with st.spinner("🔮 Running XGBoost prediction via FastAPI..."):
             for v in played:
                 if score_a >= max_wins or score_b >= max_wins: break
                 try:
@@ -270,7 +265,7 @@ with tab3:
 
         winner = team_a if score_a >= max_wins else team_b
 
-        # Series result banner
+        # Series result
         st.subheader("🏆 Series result")
         c1, c2, c3 = st.columns([2,1,2])
         with c1:
@@ -280,8 +275,10 @@ with tab3:
                 st.error(f"**{team_a}**")
             st.metric("Maps won", score_a)
         with c2:
-            st.markdown(f"<h2 style='text-align:center;margin-top:20px'>{score_a} – {score_b}</h2>",
-                        unsafe_allow_html=True)
+            st.markdown(
+                f"<h2 style='text-align:center;margin-top:20px'>"
+                f"{score_a} – {score_b}</h2>",
+                unsafe_allow_html=True)
         with c3:
             if winner == team_b:
                 st.success(f"🏆 **{team_b}**")
@@ -289,7 +286,8 @@ with tab3:
                 st.error(f"**{team_b}**")
             st.metric("Maps won", score_b)
 
-        st.info(f"🏆 **{winner}** predicted to win the {fmt} series **{score_a}–{score_b}**")
+        st.info(f"🏆 **{winner}** predicted to win the {fmt} "
+                f"series **{score_a}–{score_b}**")
 
         # Confidence meter
         st.subheader("📊 Confidence meter")
@@ -298,22 +296,17 @@ with tab3:
             c = r.get("confidence","Low")
             conf_counts[c] = conf_counts.get(c,0) + 1
 
-        fig3, ax3 = plt.subplots(figsize=(6,1.5))
-        colors = ["#00cc66","#ffaa00","#ff4444"]
-        vals   = [conf_counts["High"], conf_counts["Medium"], conf_counts["Low"]]
-        labels = [f"High ({conf_counts['High']})",
-                  f"Medium ({conf_counts['Medium']})",
-                  f"Low ({conf_counts['Low']})"]
-        ax3.barh(["Confidence"], [conf_counts["High"]], color="#00cc66", label=labels[0])
-        ax3.barh(["Confidence"], [conf_counts["Medium"]], left=[conf_counts["High"]],
-                 color="#ffaa00", label=labels[1])
-        ax3.barh(["Confidence"], [conf_counts["Low"]],
-                 left=[conf_counts["High"]+conf_counts["Medium"]],
-                 color="#ff4444", label=labels[2])
-        ax3.set_xlim(0, len(map_results))
-        ax3.legend(loc="upper right")
+        fig3, ax3 = plt.subplots(figsize=(6,0.8))
+        left = 0
+        for label, color in [("High","#00cc66"),("Medium","#ffaa00"),("Low","#ff4444")]:
+            val = conf_counts[label]
+            if val > 0:
+                ax3.barh([""], [val], left=[left], color=color, label=f"{label} ({val})")
+                left += val
+        ax3.set_xlim(0, len(map_results) if map_results else 1)
+        ax3.legend(loc="upper right", fontsize=9)
         ax3.set_title("Prediction confidence per map")
-        ax3.axis('off') if len(map_results)==0 else None
+        ax3.set_yticks([])
         fig3.tight_layout()
         st.pyplot(fig3)
         plt.close()
@@ -326,18 +319,19 @@ with tab3:
             conf   = r.get("confidence","–")
             conf_icon = {"High":"🟢","Medium":"🟡","Low":"🔴"}.get(conf,"⚪")
 
-            with st.expander(f"Map {i+1} — {r['map']} ({r['type']}) → {r.get('predicted_winner','?')} wins {conf_icon}"):
+            with st.expander(
+                f"Map {i+1} — {r['map']} ({r['type']}) "
+                f"→ {r.get('predicted_winner','?')} wins {conf_icon}"):
                 m1, m2, m3 = st.columns(3)
                 with m1:
                     st.metric(f"{team_a} win prob", f"{prob_a*100:.1f}%",
-                              delta=f"+{(prob_a-0.5)*100:.1f}%" if prob_a>0.5 else f"{(prob_a-0.5)*100:.1f}%")
+                              delta=f"{(prob_a-0.5)*100:+.1f}%")
                 with m2:
                     st.metric("Confidence", conf)
                 with m3:
                     st.metric(f"{team_b} win prob", f"{prob_b*100:.1f}%",
-                              delta=f"+{(prob_b-0.5)*100:.1f}%" if prob_b>0.5 else f"{(prob_b-0.5)*100:.1f}%")
+                              delta=f"{(prob_b-0.5)*100:+.1f}%")
 
-                # Prob bar
                 fig4, ax4 = plt.subplots(figsize=(6, 0.6))
                 ax4.barh([""], [prob_a], color="#185FA5", label=team_a)
                 ax4.barh([""], [prob_b], left=[prob_a], color="#993C1D", label=team_b)
@@ -350,6 +344,8 @@ with tab3:
                 st.pyplot(fig4)
                 plt.close()
 
-        # Raw JSON
+        if n8n_triggered:
+            st.success("📱 Telegram notification sent via n8n workflow!")
+
         with st.expander("📋 Raw API response (for report)"):
             st.json(map_results)
