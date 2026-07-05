@@ -7,6 +7,34 @@ import numpy as np
 API_URL     = "https://vct-predictor.onrender.com"
 N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook/retention"  # replace after setting up webhook in n8n
 
+
+TEAM_LOGOS = {
+    "100 Thieves":     "https://upload.wikimedia.org/wikipedia/en/thumb/5/54/100_Thieves_logo.png/200px-100_Thieves_logo.png",
+    "LOUD":            "https://upload.wikimedia.org/wikipedia/en/thumb/0/07/LOUD_Esports_logo.png/200px-LOUD_Esports_logo.png",
+    "NRG Esports":     "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/NRG_Esports_logo.png/200px-NRG_Esports_logo.png",
+    "Cloud9":          "https://upload.wikimedia.org/wikipedia/en/thumb/f/f5/Cloud9_logo.png/200px-Cloud9_logo.png",
+    "Evil Geniuses":   "https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Evil_Geniuses_logo.png/200px-Evil_Geniuses_logo.png",
+    "FNATIC":          "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/Fnatic_logo.png/200px-Fnatic_logo.png",
+    "Team Liquid":     "https://upload.wikimedia.org/wikipedia/en/thumb/4/45/Team_Liquid_logo.png/200px-Team_Liquid_logo.png",
+    "DRX":             "https://upload.wikimedia.org/wikipedia/en/thumb/8/8b/DRX_logo.png/200px-DRX_logo.png",
+    "Paper Rex":       "https://upload.wikimedia.org/wikipedia/en/thumb/7/7e/Paper_Rex_logo.png/200px-Paper_Rex_logo.png",
+    "T1":              "https://upload.wikimedia.org/wikipedia/en/thumb/1/13/T1_logo.png/200px-T1_logo.png",
+    "ZETA DIVISION":   "https://upload.wikimedia.org/wikipedia/en/thumb/9/9c/Zeta_Division_logo.png/200px-Zeta_Division_logo.png",
+    "FunPlus Phoenix": "https://upload.wikimedia.org/wikipedia/en/thumb/0/06/FunPlus_Phoenix_logo.png/200px-FunPlus_Phoenix_logo.png",
+    "EDward Gaming":   "https://upload.wikimedia.org/wikipedia/en/thumb/6/6f/Edward_Gaming_logo.png/200px-Edward_Gaming_logo.png",
+    "Natus Vincere":   "https://upload.wikimedia.org/wikipedia/en/thumb/6/6e/Natus_Vincere_logo.png/200px-Natus_Vincere_logo.png",
+    "Team Vitality":   "https://upload.wikimedia.org/wikipedia/en/thumb/4/4a/Team_Vitality_logo.png/200px-Team_Vitality_logo.png",
+    "Sentinels":       "https://upload.wikimedia.org/wikipedia/en/thumb/1/14/Sentinels_logo.png/200px-Sentinels_logo.png",
+    "FURIA":           "https://upload.wikimedia.org/wikipedia/en/thumb/f/f7/Furia_Esports_logo.png/200px-Furia_Esports_logo.png",
+    "Gen.G":           "https://upload.wikimedia.org/wikipedia/en/thumb/8/8d/Gen.G_logo.png/200px-Gen.G_logo.png",
+    "Talon Esports":   "https://upload.wikimedia.org/wikipedia/en/thumb/0/0e/Talon_Esports_logo.png/200px-Talon_Esports_logo.png",
+    "Sentinels":       "https://upload.wikimedia.org/wikipedia/en/thumb/1/14/Sentinels_logo.png/200px-Sentinels_logo.png",
+}
+DEFAULT_LOGO = "https://upload.wikimedia.org/wikipedia/en/thumb/d/d8/Valorant_Champions_Tour_logo.png/200px-Valorant_Champions_Tour_logo.png"
+
+def get_logo(team):
+    return TEAM_LOGOS.get(team, DEFAULT_LOGO)
+
 st.set_page_config(page_title="VCT 2023 Match Predictor", page_icon="🎯", layout="wide")
 
 st.title("🎯 VCT 2023 Match Predictor")
@@ -64,6 +92,7 @@ with st.sidebar:
 # ── Team comparison header ────────────────────────────────────────────────────
 col1, col2, col3 = st.columns([2,1,2])
 with col1:
+    st.image(get_logo(team_a), width=80)
     st.markdown(f"### 🔵 {team_a}")
     sa = get_team_stats(team_a)
     if sa:
@@ -73,6 +102,7 @@ with col1:
 with col2:
     st.markdown("<h2 style='text-align:center;margin-top:40px'>VS</h2>", unsafe_allow_html=True)
 with col3:
+    st.image(get_logo(team_b), width=80)
     st.markdown(f"### 🔴 {team_b}")
     sb = get_team_stats(team_b)
     if sb:
@@ -269,6 +299,7 @@ with tab3:
         st.subheader("🏆 Series result")
         c1, c2, c3 = st.columns([2,1,2])
         with c1:
+            st.image(get_logo(team_a), width=60)
             if winner == team_a:
                 st.success(f"🏆 **{team_a}**")
             else:
@@ -280,6 +311,7 @@ with tab3:
                 f"{score_a} – {score_b}</h2>",
                 unsafe_allow_html=True)
         with c3:
+            st.image(get_logo(team_b), width=60)
             if winner == team_b:
                 st.success(f"🏆 **{team_b}**")
             else:
