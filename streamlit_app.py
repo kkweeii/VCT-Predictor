@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 API_URL     = "https://vct-predictor.onrender.com"
-N8N_WEBHOOK = "YOUR_N8N_WEBHOOK_URL"  # replace after setting up webhook in n8n
+N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook-test/retention"  # replace after setting up webhook in n8n
 
 st.set_page_config(page_title="VCT 2023 Match Predictor", page_icon="🎯", layout="wide")
 
