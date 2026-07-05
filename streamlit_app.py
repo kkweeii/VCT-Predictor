@@ -169,11 +169,15 @@ with tab3:
         st.subheader("📡 Sending to n8n workflow...")
         n8n_triggered = False
         try:
-            n8n_resp = requests.post(N8N_WEBHOOK, json={
-                "team_a": team_a,
-                "team_b": team_b,
-                "format": fmt.lower()
-            }, timeout=10)
+            n8n_resp = requests.post(N8N_WEBHOOK, 
+                json={
+                    "team_a": team_a,
+                    "team_b": team_b,
+                    "format": fmt.lower()
+                },
+                headers={"Content-Type": "application/json"},
+                timeout=10
+            )
             if n8n_resp.status_code in [200, 201]:
                 st.success("✅ n8n workflow triggered! Telegram notification will be sent.")
                 n8n_triggered = True
