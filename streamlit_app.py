@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 API_URL     = "https://vct-predictor.onrender.com"
-N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook/retention"  # replace after setting up webhook in n8n
+N8N_WEBHOOK = "YOUR_N8N_WEBHOOK_URL"  # replace after setting up webhook in n8n
 
 st.set_page_config(page_title="VCT 2023 Match Predictor", page_icon="🎯", layout="wide")
 
@@ -169,7 +169,8 @@ with tab3:
         st.subheader("📡 Sending to n8n workflow...")
         n8n_triggered = False
         try:
-            n8n_resp = requests.post(N8N_WEBHOOK, 
+            n8n_resp = requests.post(
+                N8N_WEBHOOK,
                 json={
                     "team_a": team_a,
                     "team_b": team_b,
