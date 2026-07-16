@@ -13,10 +13,10 @@
       "name": "HTTP — Call /series",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        -528,
-        128
+        -736,
+        144
       ],
-      "id": "c275b7eb-0cf7-4694-9b3d-3d9cd0018a85",
+      "id": "facb593f-ba43-4b7f-86f6-1599a6dea946",
       "typeVersion": 4.4,
       "onError": "continueErrorOutput",
       "notes": "⚠️ VCT Predictor Error: FastAPI is down or team not found. Please check the API."
@@ -24,7 +24,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ JSON.stringify($json) }}",
+        "text": "=={{ 'Head to head history: ' + $('Code in JavaScript1').item.json.history_summary + '. Total matches: ' + $('Code in JavaScript1').item.json.total_h2h + '. ' + $('Code in JavaScript1').item.json.team_a + ' wins: ' + $('Code in JavaScript1').item.json.team_a_wins + '. ' + $('Code in JavaScript1').item.json.team_b + ' wins: ' + $('Code in JavaScript1').item.json.team_b_wins + '.\\n\\nPrediction data: ' + JSON.stringify($('HTTP — Call /series').item.json) + '\\n\\nWrite a 3 sentence match preview including the head to head record and predicted winner. No markdown formatting.' }}",
         "options": {
           "systemMessage": "You are a VCT esports analyst. Given prediction JSON, write a match preview with no tables and no markdown formatting. Use only plain text with simple line breaks. Cover: predicted winner, map veto summary, per-map predictions, and confidence level. Keep it under 200 words."
         }
@@ -32,10 +32,10 @@
       "name": "AI Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "position": [
-        -320,
+        -480,
         128
       ],
-      "id": "f19f88fa-4c70-467c-b06a-ce26e241d8c4",
+      "id": "f00286c4-505c-4098-b669-dbff73460139",
       "typeVersion": 3.1
     },
     {
@@ -65,31 +65,11 @@
       "name": "IF High Confidence",
       "type": "n8n-nodes-base.if",
       "position": [
-        -32,
+        -176,
         128
       ],
-      "id": "743b989a-9208-432e-a0a7-5a50dfc87577",
+      "id": "e321bc0a-f570-45ba-8697-813b1b1c6bbc",
       "typeVersion": 2.3
-    },
-    {
-      "parameters": {
-        "modelName": "models/gemini-3.1-flash-lite",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1.1,
-      "position": [
-        -320,
-        352
-      ],
-      "id": "f7906993-c2ff-4408-b208-7eddd5e8c2ee",
-      "name": "Google Gemini Chat Model",
-      "credentials": {
-        "googlePalmApi": {
-          "id": "rBUyhwV7LK8BfYjI",
-          "name": "Google Gemini(PaLM) Api account"
-        }
-      }
     },
     {
       "parameters": {
@@ -100,15 +80,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        320,
-        96
+        0,
+        0
       ],
-      "id": "40b3c989-1c2f-40e5-9baa-db362015b188",
+      "id": "90f1cdd7-fea2-4246-b538-a4e65d95ea8f",
       "name": "Send a text message",
       "webhookId": "31ed90b6-9e77-499c-9db6-84f7c5b00e9d",
       "credentials": {
         "telegramApi": {
-          "id": "qwLt0UQQIuf7BSFo",
+          "id": "4a6KqJDEgS4HQvH5",
           "name": "Telegram account"
         }
       }
@@ -122,15 +102,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        160,
-        144
+        0,
+        240
       ],
-      "id": "8e681152-8ab1-4798-b19e-b18201444b3b",
+      "id": "e703ee71-971d-46cf-8fc6-9e913ee82a51",
       "name": "Send a text message1",
       "webhookId": "104c720e-0d90-483f-b61c-92dfd483c2e0",
       "credentials": {
         "telegramApi": {
-          "id": "qwLt0UQQIuf7BSFo",
+          "id": "4a6KqJDEgS4HQvH5",
           "name": "Telegram account"
         }
       }
@@ -144,10 +124,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -960,
-        128
+        -1392,
+        144
       ],
-      "id": "a0c320ec-f29c-49b8-bfff-e966fb7656ba",
+      "id": "e8744c8a-3799-439f-814e-a258e09549df",
       "name": "Webhook",
       "webhookId": "0e75a71d-07ef-4b0b-adf0-3b099ff88e77"
     },
@@ -158,10 +138,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -736,
-        128
+        -1232,
+        144
       ],
-      "id": "81abbcf6-fcc9-456b-92cc-1f32b9c1cb27",
+      "id": "38dc229e-7c5f-4f31-94c0-2acd2f65310c",
       "name": "Code in JavaScript"
     },
     {
@@ -173,15 +153,15 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        -544,
-        352
+        -624,
+        288
       ],
-      "id": "f26d975c-3f67-49b6-9893-6c642d047781",
+      "id": "f3a0b623-4e62-4217-81a9-ff6f54bd3a7f",
       "name": "Send a text message2",
       "webhookId": "707826ee-1f77-426d-83ec-4b7753b624ef",
       "credentials": {
         "telegramApi": {
-          "id": "qwLt0UQQIuf7BSFo",
+          "id": "4a6KqJDEgS4HQvH5",
           "name": "Telegram account"
         }
       }
@@ -189,16 +169,16 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are a VCT esports coach. Based on this prediction data: {{ JSON.stringify($('HTTP — Call /series').item.json) }}\n\nGive exactly 3 bullet point tactical recommendations for {{ $('HTTP — Call /series').item.json.series_winner }} to win the series. Keep each point under 20 words. No markdown formatting.",
+        "text": "=={{ 'Match prediction: ' + $('HTTP — Call /series').item.json.series_winner + ' is predicted to win ' + $('HTTP — Call /series').item.json.score + '. Head to head: ' + $('Code in JavaScript1').item.json.history_summary + '. Map results: ' + JSON.stringify($('HTTP — Call /series').item.json.map_results) + '. Write 3 interesting insights for VCT fans watching this match. Include key players to watch, maps to look out for, and what makes this match exciting. Keep it under 100 words. No markdown formatting.' }}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -32,
-        432
+        144,
+        128
       ],
-      "id": "afb8f7df-afb7-4ff7-88db-a1d9d6efbb98",
+      "id": "6f6cb3ad-1a6c-41aa-9b61-caa0aa61bca7",
       "name": "AI Agent1"
     },
     {
@@ -209,14 +189,14 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        -32,
-        608
+        144,
+        320
       ],
-      "id": "1221ea4b-0213-448d-a34a-4f894f242817",
+      "id": "8658b201-b0ce-4b17-834a-903983d82576",
       "name": "Google Gemini Chat Model1",
       "credentials": {
         "googlePalmApi": {
-          "id": "rBUyhwV7LK8BfYjI",
+          "id": "yWmM9xVk7o55uMJm",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
@@ -224,22 +204,272 @@
     {
       "parameters": {
         "chatId": "8215649987",
-        "text": "=🧠 Tactical advice for {{ $('HTTP — Call /series').item.json.series_winner }}:  {{ $json.output }}",
+        "text": "={{ '🎯 Match insights:\\n\\n' + $('AI Agent1').item.json.output }}",
         "additionalFields": {}
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        304,
-        432
+        848,
+        112
       ],
-      "id": "30c5b85e-17bb-45e8-83cc-3239a5bcf3bd",
+      "id": "7141596b-3c6a-4957-9e8d-8d69ab379b6f",
       "name": "Send a text message3",
       "webhookId": "8d733852-9ce9-4e8e-b07b-b3d12903e42f",
       "credentials": {
         "telegramApi": {
-          "id": "qwLt0UQQIuf7BSFo",
+          "id": "4a6KqJDEgS4HQvH5",
           "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1puUBbpxbezKBEOndeABmtvBqcU50ZnyEtIyjEQWK9T0",
+          "mode": "list",
+          "cachedResultName": "VCT_Predicton_History",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1puUBbpxbezKBEOndeABmtvBqcU50ZnyEtIyjEQWK9T0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1puUBbpxbezKBEOndeABmtvBqcU50ZnyEtIyjEQWK9T0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1072,
+        144
+      ],
+      "id": "5a640a9c-78ec-456e-9796-ad2ef6cdeb34",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Fu1tzve7dVuGy9Zo",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst teamA = $('Code in JavaScript').item.json.team_a;\nconst teamB = $('Code in JavaScript').item.json.team_b;\n\nconst h2h = rows.filter(r => {\n  const ra = r.json['Team A'];\n  const rb = r.json['Team B'];\n  return (ra === teamA && rb === teamB) || (ra === teamB && rb === teamA);\n});\n\nconst teamAWins = h2h.filter(r => r.json['Winner'] === teamA).length;\nconst teamBWins = h2h.filter(r => r.json['Winner'] === teamB).length;\n\nreturn [{\n  json: {\n    team_a: teamA,\n    team_b: teamB,\n    format: $('Code in JavaScript').item.json.format,\n    total_h2h: h2h.length,\n    team_a_wins: teamAWins,\n    team_b_wins: teamBWins,\n    history_summary: h2h.length > 0 \n      ? `Head-to-head: ${teamA} ${teamAWins} - ${teamBWins} ${teamB} (${h2h.length} matches)`\n      : `No previous matches between ${teamA} and ${teamB}`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        144
+      ],
+      "id": "bb07bd65-4d21-4690-87d6-e5c67ad18c17",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1puUBbpxbezKBEOndeABmtvBqcU50ZnyEtIyjEQWK9T0",
+          "mode": "list",
+          "cachedResultName": "VCT_Predicton_History",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1puUBbpxbezKBEOndeABmtvBqcU50ZnyEtIyjEQWK9T0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1puUBbpxbezKBEOndeABmtvBqcU50ZnyEtIyjEQWK9T0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Team A",
+              "displayName": "Team A",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Team B",
+              "displayName": "Team B",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Format",
+              "displayName": "Format",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Winner",
+              "displayName": "Winner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Confidence",
+              "displayName": "Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        112
+      ],
+      "id": "c33c59c6-202a-44f9-9ea1-b3fd07f02782",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Fu1tzve7dVuGy9Zo",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eb2a959a-0010-43d7-b5cb-654c5997934b",
+              "name": "Timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "a9f61810-f182-4579-bda5-075f170fe0d8",
+              "name": "Team A",
+              "value": "={{ $('Code in JavaScript').item.json.team_a }}",
+              "type": "string"
+            },
+            {
+              "id": "ee78e57a-f4ca-47ad-aa23-b473c947fa9d",
+              "name": "Team B",
+              "value": "={{ $('Code in JavaScript').item.json.team_b }}",
+              "type": "string"
+            },
+            {
+              "id": "4fc24a2a-ff3c-4c66-bf63-59390fa11141",
+              "name": "Format",
+              "value": "={{ $('Code in JavaScript').item.json.format }}",
+              "type": "string"
+            },
+            {
+              "id": "044f9a2b-d5e3-4984-927b-f004c7db7203",
+              "name": "Winner",
+              "value": "={{ $('HTTP — Call /series').item.json.series_winner }}",
+              "type": "string"
+            },
+            {
+              "id": "4ce4806c-c1ba-4073-a4a4-e5912a3f4c00",
+              "name": "Score",
+              "value": "={{ $('HTTP — Call /series').item.json.score }}",
+              "type": "string"
+            },
+            {
+              "id": "7ce12c1e-67c6-47f0-8ce8-ed68079dc256",
+              "name": "Confidence",
+              "value": "={{ $('HTTP — Call /series').item.json.map_results[0].confidence }}",
+              "type": "string"
+            },
+            {
+              "id": "00500af5-6b27-4d4a-848a-1ace7f992486",
+              "name": "AI Summary",
+              "value": "={{ $('AI Agent').item.json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        464,
+        112
+      ],
+      "id": "6c557258-449d-40db-accb-b0e55175f113",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        336
+      ],
+      "id": "194f28e4-e53e-42ba-972d-05fad2aaea64",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yWmM9xVk7o55uMJm",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
     }
@@ -303,17 +533,6 @@
         ]
       ]
     },
-    "Google Gemini Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Webhook": {
       "main": [
         [
@@ -329,21 +548,11 @@
       "main": [
         [
           {
-            "node": "HTTP — Call /series",
+            "node": "Get row(s) in sheet",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "Send a text message1": {
-      "main": [
-        []
-      ]
-    },
-    "Send a text message": {
-      "main": [
-        []
       ]
     },
     "Google Gemini Chat Model1": {
@@ -361,8 +570,63 @@
       "main": [
         [
           {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP — Call /series",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
             "node": "Send a text message3",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -375,12 +639,12 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "22a32973-bca6-40a3-833a-e26b1c0160a5",
+  "versionId": "5fc18213-633e-4ed7-a1e1-3c82fc4460d8",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "1e511516838668c8522f4aaf9a90a985f02684f653cc8eecaa10e92c73dfbf42"
+    "instanceId": "311ebfb61b1ec9ea2feff550cf52a778dad3c77c3c577986b32b65fc8f45d5dd"
   },
   "nodeGroups": [],
-  "id": "cf2VAnVV8ryVf0y9",
+  "id": "mrwD6r5prNzSbaKI",
   "tags": []
 }
