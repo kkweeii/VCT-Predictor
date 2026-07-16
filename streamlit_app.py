@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 API_URL     = "https://vct-predictor.onrender.com"
-N8N_WEBHOOK = "https://kkweeii.app.n8n.cloud/webhook/retention"  # replace after setting up webhook in n8n
+N8N_WEBHOOK = "https://kkweeii11.app.n8n.cloud/webhook/retention"  # replace after setting up webhook in n8n
 
 
 TEAM_COLORS = {
